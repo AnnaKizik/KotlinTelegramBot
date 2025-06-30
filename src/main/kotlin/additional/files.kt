@@ -6,14 +6,16 @@ fun main() {
     val wordsFile = File("words.txt")
     wordsFile.createNewFile()
 
-    val lines: List<String> = wordsFile.readLines()
-    val dictionary = mutableListOf<Word>()
-
-    for (line in lines) {
-        val line = line.split("|")
-        val newWord = Word(original = line[0], translate = line[1], correctAnswersCount = line[2].toIntOrNull() ?: 0)
-        dictionary.add(newWord)
-    }
-
+    val dictionary = loadDictionary(wordsFile.readLines())
     println(dictionary)
+}
+
+fun loadDictionary(lines: List<String>): MutableList<Word> {
+    val words = mutableListOf<Word>()
+    for (i in lines) {
+        val line = i.split("|")
+        val newWord = Word(original = line[0], translate = line[1], correctAnswersCount = line[2].toIntOrNull() ?: 0)
+        words.add(newWord)
+    }
+    return words
 }
