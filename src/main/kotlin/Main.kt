@@ -1,5 +1,6 @@
 package org.example
 
+import org.example.additional.LEARNED_COUNT
 import org.example.additional.loadDictionary
 import java.io.File
 
@@ -28,8 +29,8 @@ fun main() {
                     "Выбран раздел \"Статистика\""
                 )
                 val totalCount = dictionary.size
-                val learnedCount = dictionary.filter { it.correctAnswersCount!! >= 3 }.size
-                val percent = (learnedCount / totalCount) * 100
+                val learnedCount = dictionary.filter { it.correctAnswersCount >= LEARNED_COUNT }.size
+                val percent = learnedCount *100 / totalCount
                 println("Выучено $learnedCount из $totalCount слов | $percent%\n")
                 continue
             }
@@ -41,5 +42,4 @@ fun main() {
             }
         }
     }
-
 }

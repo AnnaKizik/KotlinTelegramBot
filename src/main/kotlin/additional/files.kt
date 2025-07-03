@@ -8,7 +8,7 @@ fun createNewWordsFile(fileName: String): File {
     return wordsFile
 }
 
-fun loadDictionary(file: File): MutableList<Word> {
+fun loadDictionary(file: File): List<Word> {
     val words = mutableListOf<Word>()
     for (lines in file.readLines()) {
         val line = lines.split("|")
