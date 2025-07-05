@@ -1,6 +1,7 @@
 package org.example
 
 import org.example.additional.LEARNED_COUNT
+import org.example.additional.Word
 import org.example.additional.loadDictionary
 import java.io.File
 
@@ -20,9 +21,31 @@ fun main() {
         val userInput = readln()
 
         when (userInput) {
-            "1" -> println(
-                "Выбран раздел \"Учить слова\""
-            )
+            "1" -> {
+                println(
+                    "Выбран раздел \"Учить слова\""
+                )
+                val notLearnedList = dictionary.filter { it.correctAnswersCount < LEARNED_COUNT }
+                if (notLearnedList.isEmpty()) {
+                    println("Все слова выучены")
+                    continue
+                } else {
+                    val questionWords = notLearnedList.take(4).shuffled()
+                    var correctAnswer: Word
+
+                    while (notLearnedList.isNotEmpty()) {
+                        questionWords.forEach { word ->
+                            correctAnswer = word
+                            println("${correctAnswer.original}:")
+                            questionWords.shuffled().forEachIndexed { index, variant ->
+                                println("${index + 1} - ${variant.translate}")
+                            }
+                            print("Введите номер ответа: ")
+                            val userAnswer = readln()
+                        }
+                    }
+                }
+            }
 
             "2" -> {
                 println(
