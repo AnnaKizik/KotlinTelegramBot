@@ -2,18 +2,16 @@ package org.example.additional
 
 import java.io.File
 
-fun main() {
-    val wordsFile = File("words.txt")
+fun createNewWordsFile(fileName: String): File {
+    val wordsFile = File(fileName)
     wordsFile.createNewFile()
-
-    val dictionary = loadDictionary(wordsFile.readLines())
-    println(dictionary)
+    return wordsFile
 }
 
-fun loadDictionary(lines: List<String>): MutableList<Word> {
+fun loadDictionary(file: File): List<Word> {
     val words = mutableListOf<Word>()
-    for (i in lines) {
-        val line = i.split("|")
+    for (lines in file.readLines()) {
+        val line = lines.split("|")
         val newWord = Word(original = line[0], translate = line[1], correctAnswersCount = line[2].toIntOrNull() ?: 0)
         words.add(newWord)
     }
