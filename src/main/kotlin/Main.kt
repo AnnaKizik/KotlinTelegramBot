@@ -5,6 +5,8 @@ import org.example.additional.Word
 import org.example.additional.loadDictionary
 import java.io.File
 
+const val WORDS_TO_LEARN_COUNT = 4
+
 fun main() {
     val dictionary = loadDictionary(File("words.txt"))
 
@@ -28,9 +30,8 @@ fun main() {
                 val notLearnedList = dictionary.filter { it.correctAnswersCount < LEARNED_COUNT }
                 if (notLearnedList.isEmpty()) {
                     println("Все слова выучены")
-                    continue
                 } else {
-                    val questionWords = notLearnedList.take(4).shuffled()
+                    val questionWords = notLearnedList.shuffled().take(WORDS_TO_LEARN_COUNT)
                     var correctAnswer: Word
 
                     while (notLearnedList.isNotEmpty()) {
