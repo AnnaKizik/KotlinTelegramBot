@@ -27,38 +27,32 @@ fun main() {
                 println(
                     "Выбран раздел \"Учить слова\""
                 )
-                var notLearnedList = dictionary.filter { it.correctAnswersCount < LEARNED_COUNT }
-                if (notLearnedList.isEmpty()) {
-                    println("Все слова выучены")
-                } else {
+                while (true) {
+                    val notLearnedList = dictionary.filter { it.correctAnswersCount < LEARNED_COUNT }
+                    if (notLearnedList.isEmpty()) {
+                        println("Все слова выучены")
+                        break
+                    }
                     val questionWords = notLearnedList.shuffled().take(WORDS_TO_LEARN_COUNT)
-                    while (notLearnedList.isNotEmpty()) {
-                        val correctAnswer = questionWords.random()
-                        println("\n${correctAnswer.original}:")
+                    val correctAnswer = questionWords.random()
+                    println("\n${correctAnswer.original}:")
+                    val answerOptions = questionWords.shuffled()
+                    val correctAnswerId = answerOptions.indexOf(correctAnswer).toString()
+                    answerOptions.forEachIndexed { index, variant ->
+                        println("${index + 1} - ${variant.translate}")
+                    }
+                    println("----------\n0 - Меню")
+                    print("Введите номер ответа: ")
+                    val userAnswerInput = readln()
 
-                        val answerOptions = questionWords.shuffled()
-                        val correctAnswerId = answerOptions.indexOf(correctAnswer).toString()
-                        answerOptions.forEachIndexed { index, variant ->
-                            println("${index + 1} - ${variant.translate}")
-                        }
-                        println("----------\n0 - Меню")
-                        print("Введите номер ответа: ")
-                        val userAnswerInput = readln()
+                    if (userAnswerInput == "0") break
 
-                        if (userAnswerInput == "0") break
-
-                        if (correctAnswerId == (userAnswerInput.toInt() - 1).toString()) {
-                            println("Правильно!")
-                            correctAnswer.correctAnswersCount++
-                            saveDictionary(dictionary, File("words.txt"))
-                        } else {
-                            println("Неправильно! ${correctAnswer.original} – это ${correctAnswer.translate}")
-                        }
-                        notLearnedList = dictionary.filter { it.correctAnswersCount < LEARNED_COUNT }
-                        if (notLearnedList.isEmpty()) {
-                            println("Все слова выучены")
-                            break
-                        }
+                    if (correctAnswerId == (userAnswerInput.toInt() - 1).toString()) {
+                        println("Правильно!")
+                        correctAnswer.correctAnswersCount++
+                        saveDictionary(dictionary, File("words.txt"))
+                    } else {
+                        println("Неправильно! ${correctAnswer.original} – это ${correctAnswer.translate}")
                     }
                 }
             }
