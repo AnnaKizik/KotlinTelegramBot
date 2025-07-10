@@ -17,3 +17,10 @@ fun loadDictionary(file: File): List<Word> {
     }
     return words
 }
+
+fun saveDictionary(updateDictionary: List<Word>, file: File) {
+    val updateWordList = updateDictionary.joinToString("\n") { word ->
+        "${word.original}|${word.translate}|${word.correctAnswersCount}"
+    }
+    file.writeText(updateWordList)
+}
