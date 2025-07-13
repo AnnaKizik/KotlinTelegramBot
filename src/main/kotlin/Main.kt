@@ -1,14 +1,17 @@
 package org.example
 
-import org.example.additional.LEARNED_COUNT
-import org.example.additional.loadDictionary
-import org.example.additional.saveDictionary
-import java.io.File
-
-const val WORDS_TO_LEARN_COUNT = 4
+fun Question.asConsoleString(): String {
+    val answerVariants = this.variants
+        .mapIndexed { index: Int, word: Word ->
+            "${index + 1} - ${word.translate}"
+        }.shuffled()
+        .joinToString("\n")
+    return this.correctAnswer.original + "\n" + answerVariants + "\n0 - Меню"
+}
 
 fun main() {
-    val dictionary = loadDictionary(File("words.txt"))
+
+    val trainer = LearnWordsTrainer()
 
     while (true) {
         println(
@@ -27,32 +30,26 @@ fun main() {
                 println(
                     "Выбран раздел \"Учить слова\""
                 )
+
+                val notLearnedList = trainer.getNotLearnedList()
+                val questionWords = trainer.getQuestionWords(notLearnedList)
+
                 while (true) {
-                    val notLearnedList = dictionary.filter { it.correctAnswersCount < LEARNED_COUNT }
-                    if (notLearnedList.isEmpty()) {
-                        println("Все слова выучены")
+                    val question = trainer.getNextQuestion(notLearnedList, questionWords)
+                    if (question == null) {
+                        println("Все слова выучены!")
                         break
-                    }
-                    val questionWords = notLearnedList.shuffled().take(WORDS_TO_LEARN_COUNT)
-                    val correctAnswer = questionWords.random()
-                    println("\n${correctAnswer.original}:")
-                    val answerOptions = questionWords.shuffled()
-                    val correctAnswerId = answerOptions.indexOf(correctAnswer).toString()
-                    answerOptions.forEachIndexed { index, variant ->
-                        println("${index + 1} - ${variant.translate}")
-                    }
-                    println("----------\n0 - Меню")
-                    print("Введите номер ответа: ")
-                    val userAnswerInput = readln()
-
-                    if (userAnswerInput == "0") break
-
-                    if (correctAnswerId == (userAnswerInput.toInt() - 1).toString()) {
-                        println("Правильно!")
-                        correctAnswer.correctAnswersCount++
-                        saveDictionary(dictionary, File("words.txt"))
                     } else {
-                        println("Неправильно! ${correctAnswer.original} – это ${correctAnswer.translate}")
+                        println(question.asConsoleString())
+                        print("Введите номер ответа: ")
+                        val userAnswerInput = readln().toIntOrNull()
+                        if (userAnswerInput == 0) break
+
+                        if (trainer.checkAnswer(userAnswerInput?.minus(1))) {
+                            println("Правильно!")
+                        } else {
+                            println("Неправильно! ${question.correctAnswer.original} – это ${question.correctAnswer.translate}")
+                        }
                     }
                 }
             }
@@ -61,10 +58,8 @@ fun main() {
                 println(
                     "Выбран раздел \"Статистика\""
                 )
-                val totalCount = dictionary.size
-                val learnedCount = dictionary.filter { it.correctAnswersCount >= LEARNED_COUNT }.size
-                val percent = learnedCount * 100 / totalCount
-                println("Выучено $learnedCount из $totalCount слов | $percent%\n")
+                val statistics = trainer.getStatistics()
+                println("Выучено ${statistics.learnedCount} из ${statistics.totalCount} слов | ${statistics.percent}%\n")
                 continue
             }
 
