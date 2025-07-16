@@ -2,9 +2,6 @@ package org.example
 
 import java.io.File
 
-const val WORDS_TO_LEARN_COUNT = 4
-const val LEARNED_COUNT = 3
-
 data class Word(
     val original: String,
     val translate: String,
@@ -23,48 +20,33 @@ data class Question(
 )
 
 class LearnWordsTrainer {
-
+    private val wordsToLearnCount = 4
+    private val learnedCount = 3
     private var question: Question? = null
-    private val dictionary = loadDictionary(File("words.txt"))
+    private val dictionary = loadDictionary()
 
     fun getStatistics(): Statistics {
         val totalCount = dictionary.size
-        val learnedCount = dictionary.filter { it.correctAnswersCount >= LEARNED_COUNT }.size
+        val learnedCount = dictionary.filter { it.correctAnswersCount >= learnedCount }.size
         val percent = learnedCount * 100 / totalCount
         return Statistics(totalCount, learnedCount, percent)
     }
 
-    fun getNotLearnedList(): List<Word>? {
-        val notLearnedList = dictionary.filter { it.correctAnswersCount < LEARNED_COUNT }
-        if (notLearnedList.isEmpty()) return null
-        else return notLearnedList
-    }
+    fun getNextQuestion(): Question? {
+        val notLearnedList = getNotLearnedList()
+        val questionWords = getQuestionWords(notLearnedList)
 
-    fun getQuestionWords(notLearnedList: List<Word>?): List<Word>? {
-        if (notLearnedList == null) {
-            return null
-        } else {
-            var questionWords = notLearnedList.shuffled().take(WORDS_TO_LEARN_COUNT)
-            if (questionWords.size < WORDS_TO_LEARN_COUNT) {
-                questionWords = (questionWords + dictionary).take(WORDS_TO_LEARN_COUNT)
-            }
-            return questionWords
-        }
-    }
-
-    fun getNextQuestion(notLearnedList: List<Word>?, questionWords: List<Word>?): Question? {
         if (questionWords == null || notLearnedList == null) return null
 
-        val updateNotLearnedList = notLearnedList.filter { it.correctAnswersCount < LEARNED_COUNT }
+        val updateNotLearnedList = notLearnedList.filter { it.correctAnswersCount < learnedCount }
         if (updateNotLearnedList.isEmpty()) return null
 
-        val updateQuestionWords = updateNotLearnedList.shuffled().take(WORDS_TO_LEARN_COUNT)
+        val updateQuestionWords = updateNotLearnedList.shuffled().take(wordsToLearnCount)
         if (updateQuestionWords.isEmpty()) return null
 
         val correctAnswer = updateQuestionWords.random()
         question = Question(questionWords, correctAnswer)
         return question
-
     }
 
     fun checkAnswer(userAnswerIndex: Int?): Boolean {
@@ -72,7 +54,7 @@ class LearnWordsTrainer {
             val correctAnswerId = it.variants.indexOf(it.correctAnswer)
             if (correctAnswerId == userAnswerIndex) {
                 it.correctAnswer.correctAnswersCount++
-                saveDictionary(dictionary, File("words.txt"))
+                saveDictionary()
                 true
             } else {
                 false
@@ -80,9 +62,27 @@ class LearnWordsTrainer {
         } ?: false
     }
 
-    private fun loadDictionary(file: File): List<Word> {
+    private fun getNotLearnedList(): List<Word>? {
+        val notLearnedList = dictionary.filter { it.correctAnswersCount < learnedCount }
+        if (notLearnedList.isEmpty()) return null
+        else return notLearnedList
+    }
+
+    private fun getQuestionWords(notLearnedList: List<Word>?): List<Word>? {
+        if (notLearnedList == null) {
+            return null
+        } else {
+            var questionWords = notLearnedList.shuffled().take(wordsToLearnCount)
+            if (questionWords.size < wordsToLearnCount) {
+                questionWords = (questionWords + dictionary).take(wordsToLearnCount)
+            }
+            return questionWords
+        }
+    }
+
+    private fun loadDictionary(): List<Word> {
         val words = mutableListOf<Word>()
-        for (lines in file.readLines()) {
+        for (lines in File("words.txt").readLines()) {
             val line = lines.split("|")
             val newWord =
                 Word(original = line[0], translate = line[1], correctAnswersCount = line[2].toIntOrNull() ?: 0)
@@ -91,10 +91,10 @@ class LearnWordsTrainer {
         return words
     }
 
-    private fun saveDictionary(updateDictionary: List<Word>, file: File) {
-        val updateWordList = updateDictionary.joinToString("\n") { word ->
+    private fun saveDictionary() {
+        val updateWordList = dictionary.joinToString("\n") { word ->
             "${word.original}|${word.translate}|${word.correctAnswersCount}"
         }
-        file.writeText(updateWordList)
+        File("words.txt").writeText(updateWordList)
     }
 }

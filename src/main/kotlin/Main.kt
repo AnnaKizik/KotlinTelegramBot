@@ -4,9 +4,9 @@ fun Question.asConsoleString(): String {
     val answerVariants = this.variants
         .mapIndexed { index: Int, word: Word ->
             "${index + 1} - ${word.translate}"
-        }.shuffled()
-        .joinToString("\n")
-    return this.correctAnswer.original + "\n" + answerVariants + "\n0 - Меню"
+        }
+        .joinToString(separator = "\n", prefix = "\n" + this.correctAnswer.original + "\n", postfix = "\n0 - Меню")
+    return answerVariants
 }
 
 fun main() {
@@ -16,6 +16,7 @@ fun main() {
     while (true) {
         println(
             """
+            
             Меню:
             1 – Учить слова
             2 – Статистика
@@ -30,12 +31,8 @@ fun main() {
                 println(
                     "Выбран раздел \"Учить слова\""
                 )
-
-                val notLearnedList = trainer.getNotLearnedList()
-                val questionWords = trainer.getQuestionWords(notLearnedList)
-
                 while (true) {
-                    val question = trainer.getNextQuestion(notLearnedList, questionWords)
+                    val question = trainer.getNextQuestion()
                     if (question == null) {
                         println("Все слова выучены!")
                         break
@@ -59,7 +56,7 @@ fun main() {
                     "Выбран раздел \"Статистика\""
                 )
                 val statistics = trainer.getStatistics()
-                println("Выучено ${statistics.learnedCount} из ${statistics.totalCount} слов | ${statistics.percent}%\n")
+                println("Выучено ${statistics.learnedCount} из ${statistics.totalCount} слов | ${statistics.percent}%")
                 continue
             }
 
