@@ -74,21 +74,25 @@ class LearnWordsTrainer {
         } else {
             var questionWords = notLearnedList.shuffled().take(wordsToLearnCount)
             if (questionWords.size < wordsToLearnCount) {
-                questionWords = (questionWords + dictionary).take(wordsToLearnCount)
+                questionWords = (questionWords + dictionary).distinct().take(wordsToLearnCount).shuffled()
             }
             return questionWords
         }
     }
 
     private fun loadDictionary(): List<Word> {
-        val words = mutableListOf<Word>()
-        for (lines in File("words.txt").readLines()) {
-            val line = lines.split("|")
-            val newWord =
-                Word(original = line[0], translate = line[1], correctAnswersCount = line[2].toIntOrNull() ?: 0)
-            words.add(newWord)
+        try {
+            val words = mutableListOf<Word>()
+            for (lines in File("words.txt").readLines()) {
+                val line = lines.split("|")
+                val newWord =
+                    Word(original = line[0], translate = line[1], correctAnswersCount = line[2].toIntOrNull() ?: 0)
+                words.add(newWord)
+            }
+            return words
+        } catch (e: IndexOutOfBoundsException) {
+            throw IllegalStateException("Некорректный файл")
         }
-        return words
     }
 
     private fun saveDictionary() {
