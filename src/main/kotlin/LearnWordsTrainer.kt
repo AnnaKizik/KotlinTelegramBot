@@ -74,7 +74,7 @@ class LearnWordsTrainer {
         } else {
             var questionWords = notLearnedList.shuffled().take(wordsToLearnCount)
             if (questionWords.size < wordsToLearnCount) {
-                questionWords = (questionWords + dictionary).distinct().take(wordsToLearnCount).shuffled()
+                questionWords = (questionWords + dictionary.shuffled()).distinct().take(wordsToLearnCount).shuffled()
             }
             return questionWords
         }
