@@ -9,27 +9,25 @@ fun main(args: Array<String>) {
 
     val botToken = args[0]
     var updateId = 0
-    var messageTextRegex: Regex
-    var messageIdRegex: Regex
+    val messageIdRegexOld: Regex = ".*\"update_id\":(\\d+), \n\"message\".*".toRegex()
+    val messageTextRegex: Regex = "\"text\":\"(.+?)\"".toRegex()
+    val messageIdRegex: Regex = "\"update_id\":(\\d+)".toRegex()
 
     while (true) {
         Thread.sleep(2000)
         val updates: String = getUpdates(botToken, updateId)
         println(updates)
 
-        val startUpdateId = updates.lastIndexOf("update_id")
-        val endUpdateId = updates.lastIndexOf(",\n\"message\"")
-        if (startUpdateId == -1 || endUpdateId == -1) continue
-        val updateIdString = updates.substring(startUpdateId + 11, endUpdateId)
-        updateId = updateIdString.toInt() + 1
+        val matchIdOldResult: MatchResult? = messageIdRegexOld.find(updates)
+        val groupsIdOld = matchIdOldResult?.groups
+        updateId = groupsIdOld?.get(1)?.value?.toInt() ?: 0
+        println(updateId)
 
-        messageTextRegex = "\"text\":\"(.+?)\"".toRegex()
         val matchResult: MatchResult? = messageTextRegex.find(updates)
         val groups = matchResult?.groups
         val text = groups?.get(1)?.value
         println(text)
 
-        messageIdRegex = "\"update_id\":(\\d+)".toRegex()
         val matchIdResult: MatchResult? = messageIdRegex.find(updates)
         val groupsId = matchIdResult?.groups
         updateId = groupsId?.get(1)?.value?.toInt() ?: 0
