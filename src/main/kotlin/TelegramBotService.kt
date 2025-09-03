@@ -12,7 +12,13 @@ class TelegramBotService(private val botToken: String) {
         val urlGetUpdates = "$TELEGRAM_BASE_URL/bot$botToken/getUpdates?offset=$updateId"
         val client: HttpClient = HttpClient.newBuilder().build()
         val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlGetUpdates)).build()
-        val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
+        val response: HttpResponse<String> =
+            try {
+                client.send(request, HttpResponse.BodyHandlers.ofString())
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return ""
+            }
         return response.body()
     }
 
@@ -26,12 +32,20 @@ class TelegramBotService(private val botToken: String) {
             }"
         val client: HttpClient = HttpClient.newBuilder().build()
         val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlSendMessage)).build()
-        val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
+        val response: HttpResponse<String> =
+            try {
+                client.send(request, HttpResponse.BodyHandlers.ofString())
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return ""
+            }
         return response.body()
     }
 
     companion object {
         const val TELEGRAM_BASE_URL = "https://api.telegram.org"
+        const val LEARN_WORDS_CLICKED = "learn_words_clicked"
+        const val STATISTICS_CLICKED = "statistics_clicked"
     }
 
     fun sendMenu(chatId: Long): String {
@@ -44,11 +58,11 @@ class TelegramBotService(private val botToken: String) {
             [
             {
             "text": "Изучить слова",
-             "callback_data": "learn_words_clicked"
+             "callback_data": $LEARN_WORDS_CLICKED
             },
             {
             "text": "Статистика",
-            "callback_data": "statistics_clicked"
+            "callback_data": $STATISTICS_CLICKED
             }
             ]
             ]
@@ -56,10 +70,16 @@ class TelegramBotService(private val botToken: String) {
         """.trimIndent()
         val client: HttpClient = HttpClient.newBuilder().build()
         val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(sendMessage))
-            .header("Content-type", "application/json")
+            .header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(sendMenuBody))
             .build()
-        val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
+        val response: HttpResponse<String> =
+            try {
+                client.send(request, HttpResponse.BodyHandlers.ofString())
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return ""
+            }
         return response.body()
     }
 
