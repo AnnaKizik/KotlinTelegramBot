@@ -12,7 +12,13 @@ class TelegramBotService(private val botToken: String) {
         val urlGetUpdates = "$TELEGRAM_BASE_URL/bot$botToken/getUpdates?offset=$updateId"
         val client: HttpClient = HttpClient.newBuilder().build()
         val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlGetUpdates)).build()
-        val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
+        val response: HttpResponse<String> =
+            try {
+                client.send(request, HttpResponse.BodyHandlers.ofString())
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return ""
+            }
         return response.body()
     }
 
@@ -26,11 +32,55 @@ class TelegramBotService(private val botToken: String) {
             }"
         val client: HttpClient = HttpClient.newBuilder().build()
         val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlSendMessage)).build()
-        val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
+        val response: HttpResponse<String> =
+            try {
+                client.send(request, HttpResponse.BodyHandlers.ofString())
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return ""
+            }
         return response.body()
     }
 
     companion object {
         const val TELEGRAM_BASE_URL = "https://api.telegram.org"
+        const val LEARN_WORDS_CLICKED = "learn_words_clicked"
+        const val STATISTICS_CLICKED = "statistics_clicked"
     }
+
+    fun sendMenu(chatId: Long): String {
+        val sendMessage = "$TELEGRAM_BASE_URL/bot$botToken/sendMessage"
+        val sendMenuBody = """
+            {"chat_id": $chatId,
+            "text":  "Основное меню",
+            "reply_markup": {
+            "inline_keyboard": [
+            [
+            {
+            "text": "Изучить слова",
+             "callback_data": "$LEARN_WORDS_CLICKED"
+            },
+            {
+            "text": "Статистика",
+            "callback_data": "$STATISTICS_CLICKED"
+            }
+            ]
+            ]
+            }}
+        """.trimIndent()
+        val client: HttpClient = HttpClient.newBuilder().build()
+        val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(sendMessage))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(sendMenuBody))
+            .build()
+        val response: HttpResponse<String> =
+            try {
+                client.send(request, HttpResponse.BodyHandlers.ofString())
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return ""
+            }
+        return response.body()
+    }
+
 }
