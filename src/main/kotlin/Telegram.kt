@@ -1,6 +1,8 @@
 package org.example
 
 const val START = "/start"
+const val LEARN_WORDS_CLICKED = "learn_words_clicked"
+const val STATISTICS_CLICKED = "statistics_clicked"
 
 fun main(args: Array<String>) {
 
@@ -49,8 +51,12 @@ fun main(args: Array<String>) {
             botService.sendMenu(chatId)
         }
 
-        if (data?.lowercase() == "statistics_clicked") {
-            botService.sendMessage(chatId, "Выучено 10 из 10 слов")
+        if (data?.lowercase() == STATISTICS_CLICKED) {
+            val statistics = trainer.getStatistics()
+            botService.sendMessage(
+                chatId,
+                "Выучено ${statistics.learnedCount} из ${statistics.totalCount} слов | ${statistics.percent} %"
+            )
         }
 
     }

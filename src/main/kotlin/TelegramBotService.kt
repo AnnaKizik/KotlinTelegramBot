@@ -44,8 +44,6 @@ class TelegramBotService(private val botToken: String) {
 
     companion object {
         const val TELEGRAM_BASE_URL = "https://api.telegram.org"
-        const val LEARN_WORDS_CLICKED = "learn_words_clicked"
-        const val STATISTICS_CLICKED = "statistics_clicked"
     }
 
     fun sendMenu(chatId: Long): String {
