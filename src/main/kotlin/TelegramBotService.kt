@@ -81,4 +81,37 @@ class TelegramBotService(private val botToken: String) {
         return response.body()
     }
 
+    fun sendQuestion(chatId: Long, question: Question): String {
+        val sendMessage = "$TELEGRAM_BASE_URL/bot$botToken/sendMessage"
+        val variantsKeyboard = question.variants.mapIndexed { index, word ->
+            """
+                   {
+                   "text": "${word.translate}",
+                   "callback_data":"${CALLBACK_DATA_ANSWER_PREFIX}$index"}
+               """.trimIndent()
+        }.chunked(1) { row ->
+            "[" + row.joinToString(",") + "]"
+        }.joinToString(",", "[", "]")
+        val sendQuestionBody = """
+            {"chat_id": $chatId,
+            "text":  "${question.correctAnswer.original}",
+            "reply_markup": {
+            "inline_keyboard": $variantsKeyboard
+            }}
+        """.trimIndent()
+        val client: HttpClient = HttpClient.newBuilder().build()
+        val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(sendMessage))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(sendQuestionBody))
+            .build()
+        val response: HttpResponse<String> =
+            try {
+                client.send(request, HttpResponse.BodyHandlers.ofString())
+            } catch (e: Exception) {
+                e.printStackTrace()
+                return ""
+            }
+        return response.body()
+    }
+
 }
