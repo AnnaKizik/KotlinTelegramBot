@@ -3,6 +3,7 @@ package org.example
 const val START = "/start"
 const val LEARN_WORDS_CLICKED = "learn_words_clicked"
 const val STATISTICS_CLICKED = "statistics_clicked"
+const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
 
 fun main(args: Array<String>) {
 
@@ -15,8 +16,17 @@ fun main(args: Array<String>) {
     val dataRegex: Regex = "\"data\":\"(.+?)\"".toRegex()
 
     val botService = TelegramBotService(botToken)
-
     val trainer = LearnWordsTrainer()
+
+    fun checkNextQuestionAndSend(
+        trainer: LearnWordsTrainer,
+        telegramBotService: TelegramBotService,
+        chatId: Long
+    ) {
+        val question = trainer.getNextQuestion()
+        if (question == null) telegramBotService.sendMessage(chatId, "Все слова в словаре выучены")
+        else telegramBotService.sendQuestion(chatId, question)
+    }
 
     while (true) {
         Thread.sleep(2000)
@@ -59,5 +69,12 @@ fun main(args: Array<String>) {
             )
         }
 
+        if (data?.lowercase() == LEARN_WORDS_CLICKED) {
+            checkNextQuestionAndSend(trainer, botService, chatId)
+        }
+
+        if (data?.startsWith(CALLBACK_DATA_ANSWER_PREFIX) == true) {
+            checkNextQuestionAndSend(trainer, botService, chatId)
+        }
     }
 }
