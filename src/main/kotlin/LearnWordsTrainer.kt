@@ -36,17 +36,18 @@ class LearnWordsTrainer(
 
     fun getNextQuestion(): Question? {
         val notLearnedList = getNotLearnedList()
-        val questionWords = getQuestionWords(notLearnedList)
+        if (notLearnedList.isEmpty()) return null
 
-        if (questionWords == null || notLearnedList == null) return null
+        var questionWords = notLearnedList.shuffled().take(wordsToLearnCount)
 
-        val updateNotLearnedList = notLearnedList.filter { it.correctAnswersCount < learnedCount }
-        if (updateNotLearnedList.isEmpty()) return null
+        if (questionWords.size < wordsToLearnCount) {
+            questionWords = (questionWords + dictionary.shuffled().take(wordsToLearnCount - questionWords.size))
+                .distinct()
+                .take(wordsToLearnCount)
+                .shuffled()
+        }
 
-        val updateQuestionWords = updateNotLearnedList.shuffled().take(wordsToLearnCount)
-        if (updateQuestionWords.isEmpty()) return null
-
-        val correctAnswer = updateQuestionWords.random()
+        val correctAnswer = questionWords.random()
         question = Question(questionWords, correctAnswer)
         return question
     }
@@ -64,23 +65,7 @@ class LearnWordsTrainer(
         } ?: false
     }
 
-    private fun getNotLearnedList(): List<Word>? {
-        val notLearnedList = dictionary.filter { it.correctAnswersCount < learnedCount }
-        if (notLearnedList.isEmpty()) return null
-        else return notLearnedList
-    }
-
-    private fun getQuestionWords(notLearnedList: List<Word>?): List<Word>? {
-        if (notLearnedList == null) {
-            return null
-        } else {
-            var questionWords = notLearnedList.shuffled().take(wordsToLearnCount)
-            if (questionWords.size < wordsToLearnCount) {
-                questionWords = (questionWords + dictionary.shuffled()).distinct().take(wordsToLearnCount).shuffled()
-            }
-            return questionWords
-        }
-    }
+    private fun getNotLearnedList(): List<Word> = dictionary.filter { it.correctAnswersCount < learnedCount }
 
     private fun loadDictionary(): List<Word> {
         try {

@@ -9,6 +9,7 @@ const val LEARN_WORDS_CLICKED = "learn_words_clicked"
 const val STATISTICS_CLICKED = "statistics_clicked"
 const val RESET_CLICKED = "reset_clicked"
 const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
+const val TO_MENU = "to_menu"
 
 @Serializable
 data class Update(
@@ -100,7 +101,7 @@ fun main(args: Array<String>) {
         val data = update.callbackQuery?.data
 
         val trainer = trainers.getOrPut(chatId) {
-           LearnWordsTrainer("$chatId.txt")
+            LearnWordsTrainer("$chatId.txt")
         }
 
         if (message?.lowercase() == START) {
@@ -134,6 +135,10 @@ fun main(args: Array<String>) {
                 if (answerCheck) "Правильно!" else "Неправильно! ${currentQuestion?.correctAnswer?.original} – это ${currentQuestion?.correctAnswer?.translate}"
             botService.sendMessage(chatId, messageText)
             checkNextQuestionAndSend(trainer, botService, chatId)
+        }
+
+        if (data?.lowercase() == TO_MENU) {
+            botService.sendMenu(json, chatId)
         }
     }
 
