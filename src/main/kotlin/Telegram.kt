@@ -7,7 +7,9 @@ import kotlinx.serialization.json.Json
 const val START = "/start"
 const val LEARN_WORDS_CLICKED = "learn_words_clicked"
 const val STATISTICS_CLICKED = "statistics_clicked"
+const val RESET_CLICKED = "reset_clicked"
 const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
+const val TO_MENU = "to_menu"
 
 @Serializable
 data class Update(
@@ -76,7 +78,7 @@ fun main(args: Array<String>) {
     val botToken = args[0]
     var lastUpdateId = 0L
     val botService = TelegramBotService(botToken)
-    val trainer = LearnWordsTrainer()
+    val trainers = HashMap<Long, LearnWordsTrainer>()
     var currentQuestion: Question? = null
     val json = Json {
         ignoreUnknownKeys = true
@@ -93,22 +95,13 @@ fun main(args: Array<String>) {
         else telegramBotService.sendQuestion(json, chatId, question)
     }
 
-    while (true) {
-        Thread.sleep(2000)
-        val responseString: String = TelegramBotService(botToken).getUpdates(lastUpdateId)
-        println(responseString)
-        val response: Response = json.decodeFromString(responseString)
-        val updates = response.result
-        val firstUpdate = updates.firstOrNull() ?: continue
-        val updateId = firstUpdate.updateId
-        lastUpdateId = updateId + 1
+    fun handleUpdate(update: Update, json: Json, trainers: HashMap<Long, LearnWordsTrainer>) {
+        val message = update.message?.text
+        val chatId = update.message?.chat?.id ?: update.callbackQuery?.message?.chat?.id ?: return
+        val data = update.callbackQuery?.data
 
-        val message = firstUpdate.message?.text
-        val chatId = firstUpdate.message?.chat?.id ?: firstUpdate.callbackQuery?.message?.chat?.id
-        val data = firstUpdate.callbackQuery?.data
-
-        if (!message.isNullOrEmpty()) {
-            lastUpdateId++
+        val trainer = trainers.getOrPut(chatId) {
+            LearnWordsTrainer("$chatId.txt")
         }
 
         if (message?.lowercase() == START) {
@@ -123,6 +116,14 @@ fun main(args: Array<String>) {
             )
         }
 
+        if (data?.lowercase() == RESET_CLICKED) {
+            trainer.resetProgress()
+            botService.sendMessage(
+                chatId,
+                "Прогресс сброшен"
+            )
+        }
+
         if (data?.lowercase() == LEARN_WORDS_CLICKED) {
             checkNextQuestionAndSend(trainer, botService, chatId)
         }
@@ -130,10 +131,28 @@ fun main(args: Array<String>) {
         if (data?.startsWith(CALLBACK_DATA_ANSWER_PREFIX) == true) {
             val answerIndex = data.substringAfter(CALLBACK_DATA_ANSWER_PREFIX).toInt()
             val answerCheck = trainer.checkAnswer(answerIndex)
-            val message =
-                if (answerCheck) "Правильно!" else "Неправильно! $message – это ${currentQuestion?.correctAnswer?.translate}"
-            botService.sendMessage(chatId, message)
+            val messageText =
+                if (answerCheck) "Правильно!" else "Неправильно! ${currentQuestion?.correctAnswer?.original} – это ${currentQuestion?.correctAnswer?.translate}"
+            botService.sendMessage(chatId, messageText)
             checkNextQuestionAndSend(trainer, botService, chatId)
         }
+
+        if (data?.lowercase() == TO_MENU) {
+            botService.sendMenu(json, chatId)
+        }
     }
+
+    while (true) {
+        Thread.sleep(2000)
+        val responseString: String = TelegramBotService(botToken).getUpdates(lastUpdateId)
+        println(responseString)
+
+        val response: Response = json.decodeFromString(responseString)
+        if (response.result.isEmpty()) continue
+        val sortedUpdates = response.result.sortedBy { it.updateId }
+        sortedUpdates.forEach { handleUpdate(it, json, trainers) }
+        lastUpdateId = sortedUpdates.last().updateId + 1
+
+    }
+
 }
