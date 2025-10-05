@@ -24,7 +24,7 @@ class LearnWordsTrainer(
 ) {
     private val wordsToLearnCount = 4
     private val learnedCount = 3
-    private var question: Question? = null
+    var currentQuestion: Question? = null
     private val dictionary = loadDictionary()
 
     fun getStatistics(): Statistics {
@@ -48,12 +48,12 @@ class LearnWordsTrainer(
         }
 
         val correctAnswer = questionWords.random()
-        question = Question(questionWords, correctAnswer)
-        return question
+        currentQuestion = Question(questionWords, correctAnswer)
+        return currentQuestion
     }
 
     fun checkAnswer(userAnswerIndex: Int?): Boolean {
-        return question?.let {
+        return currentQuestion?.let {
             val correctAnswerId = it.variants.indexOf(it.correctAnswer)
             if (correctAnswerId == userAnswerIndex) {
                 it.correctAnswer.correctAnswersCount++
@@ -82,7 +82,7 @@ class LearnWordsTrainer(
             }
             return words
         } catch (e: IndexOutOfBoundsException) {
-            throw IllegalStateException("Некорректный файл")
+            throw IllegalStateException("Некорректный файл", e)
         }
     }
 

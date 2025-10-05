@@ -79,7 +79,6 @@ fun main(args: Array<String>) {
     var lastUpdateId = 0L
     val botService = TelegramBotService(botToken)
     val trainers = HashMap<Long, LearnWordsTrainer>()
-    var currentQuestion: Question? = null
     val json = Json {
         ignoreUnknownKeys = true
     }
@@ -90,7 +89,7 @@ fun main(args: Array<String>) {
         chatId: Long?
     ) {
         val question = trainer.getNextQuestion()
-        currentQuestion = question
+        trainer.currentQuestion = question
         if (question == null) telegramBotService.sendMessage(chatId, "Все слова в словаре выучены")
         else telegramBotService.sendQuestion(json, chatId, question)
     }
@@ -132,7 +131,7 @@ fun main(args: Array<String>) {
             val answerIndex = data.substringAfter(CALLBACK_DATA_ANSWER_PREFIX).toInt()
             val answerCheck = trainer.checkAnswer(answerIndex)
             val messageText =
-                if (answerCheck) "Правильно!" else "Неправильно! ${currentQuestion?.correctAnswer?.original} – это ${currentQuestion?.correctAnswer?.translate}"
+                if (answerCheck) "Правильно!" else "Неправильно! ${trainer.currentQuestion?.correctAnswer?.original} – это ${trainer.currentQuestion?.correctAnswer?.translate}"
             botService.sendMessage(chatId, messageText)
             checkNextQuestionAndSend(trainer, botService, chatId)
         }
